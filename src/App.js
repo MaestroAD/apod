@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import ImageDisplay from './ImageDisplay';
+import ImageDisplay from './components/ImageDisplay';
 
 function App() {
   return (

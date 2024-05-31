@@ -49,11 +49,11 @@ const ImageDisplay = () => {
 
         const data = await response.json();
         if (Array.isArray(data)) {
-          const urls = data.map(item => item.hdurl);
+          const urls = data.map(item => item.url);
           setImageUrls(urls);
           setCarouselIndex(0); // Reset carousel index to the first image
         } else {
-          setImageUrls([data.hdurl]);
+          setImageUrls([data.url]);
           setCarouselIndex(0); // Reset carousel index to the first image
         }
       } catch (error) {
@@ -92,6 +92,7 @@ const ImageDisplay = () => {
           NASA APOD Viewer
         </Typography>
         <FormControl component="fieldset">
+          <FormLabel component="legend">Query Type</FormLabel>
           <RadioGroup row value={selectedOption} onChange={handleRadioChange}>
             <FormControlLabel value="date" control={<Radio />} label="Date" />
             <FormControlLabel value="date_range" control={<Radio />} label="Date Range" />
