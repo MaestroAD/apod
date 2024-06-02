@@ -23,6 +23,5 @@
 
 .image-display-carousel img {
   width: 100%;
-  height: 500px; /* Fixed height for all images */
   object-fit: cover; /* Ensures images are scaled to cover the element while preserving aspect ratio */
 }
