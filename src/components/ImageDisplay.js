@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   TextField,
-  Button,
-  Box,
   Grid,
-  Typography,
-  Container,
   Radio,
   RadioGroup,
   FormControlLabel,
@@ -14,10 +10,12 @@ import {
 } from '@mui/material';
 import { Carousel } from 'react-responsive-carousel';
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
+import Header from './Header';
+import Footer from './Footer';
 import './ImageDisplay.css';
 
 const ImageDisplay = () => {
-  const [imageUrls, setImageUrls] = useState([]);
+  const [imageData, setImageData] = useState([]);
   const [queryParams, setQueryParams] = useState({
     date: '',
     start_date: '',
@@ -51,11 +49,23 @@ const ImageDisplay = () => {
 
           const data = await response.json();
           if (Array.isArray(data)) {
-            const urls = data.map(item => item.hdurl);
-            setImageUrls(urls);
+            const responseData = data.map(apodItem => ({
+              title: apodItem.title,
+              date: apodItem.date,
+              explanation: apodItem.explanation,
+              media_type: apodItem.media_type,
+              url: apodItem.hdurl ? apodItem.hdurl : apodItem.url
+            }));
+            setImageData(responseData);
             setCarouselIndex(0); // Reset carousel index to the first image
           } else {
-            setImageUrls([data.hdurl]);
+            setImageData([{
+              title: data.title,
+              date: data.date,
+              explanation: data.explanation,
+              media_type: data.media_type,
+              url: data.hdurl ? data.hdurl : data.url
+            }]);
             setCarouselIndex(0); // Reset carousel index to the first image
           }
         } catch (error) {
@@ -92,13 +102,11 @@ const ImageDisplay = () => {
   };
 
   return (
-    <Container>
+    <div className='post-main-container'>
+      <Header showCarousel={showCarousel} handleFetchImages={handleSubmit} handleBack={handleBack} />
       <div className="image-display-container">
         {!showCarousel ? (
           <>
-            <Typography variant="h4" gutterBottom>
-              NASA APOD Viewer
-            </Typography>
             <FormControl component="fieldset">
               <FormLabel component="legend">Query Type</FormLabel>
               <RadioGroup row value={selectedOption} onChange={handleRadioChange}>
@@ -161,31 +169,30 @@ const ImageDisplay = () => {
                   </Grid>
                 )}
               </Grid>
-              <Button type="submit" variant="contained" color="primary" sx={{ mt: 3 }}>
-                Fetch Images
-              </Button>
             </form>
           </>
         ) : (
           <>
-            {imageUrls.length > 0 && (
+            {imageData.length > 0 && (
               <div className="image-display-carousel">
                 <Carousel selectedItem={carouselIndex} onChange={(index) => setCarouselIndex(index)} showThumbs={false}>
-                  {imageUrls.map((url, index) => (
+                  {imageData.map((apodData, index) => (
                     <div key={index}>
-                      <img src={url} alt={`NASA APOD ${index}`} />
+                      <img src={apodData.url} alt={`NASA APOD ${index}`} />
+                      <div className='image-display-apod-data'>
+                        <span><h1>{apodData.title}</h1><h1>{apodData.date}</h1></span>
+                        <p>{apodData.explanation}</p>
+                      </div>
                     </div>
                   ))}
                 </Carousel>
-                <Button variant="contained" color="primary" sx={{ mt: 3 }} onClick={handleBack}>
-                  Back to Query Form
-                </Button>
               </div>
             )}
           </>
         )}
       </div>
-    </Container>
+      <Footer />
+    </div>
   );
 };
 

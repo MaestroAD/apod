@@ -1,0 +1,11 @@
+/* Header.css */
+
+.header {
+    width: 100%;
+    background-color: #3f51b5;
+  }
+  
+  .header .MuiToolbar-root {
+    justify-content: space-between;
+  }
+  
