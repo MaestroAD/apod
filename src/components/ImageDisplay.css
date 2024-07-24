@@ -15,10 +15,9 @@
 }
 
 .image-display-carousel {
-  width: 100%;
-  max-width: 800px;
+  width: 80%;
 }
 
-.image-display-carousel img {
+.image-display-carousel img, .video-container iframe {
   width: 100%;
 }

@@ -178,9 +178,21 @@ const ImageDisplay = () => {
                 <Carousel selectedItem={carouselIndex} onChange={(index) => setCarouselIndex(index)} showThumbs={false}>
                   {imageData.map((apodData, index) => (
                     <div key={index}>
-                      <img src={apodData.url} alt={`NASA APOD ${index}`} />
+                      {apodData.media_type === 'image' ? (
+                        <img src={apodData.url} alt={`NASA APOD ${index}`} />
+                      ) : (
+                        <div className='video-container'>
+                          <iframe
+                            src={apodData.url}
+                            title={`NASA APOD ${index}`}
+                            frameBorder='0'
+                            allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+                            allowFullScreen
+                          ></iframe>
+                        </div>
+                      )}
                       <div className='image-display-apod-data'>
-                        <span><h1>{apodData.title}</h1><h1>{apodData.date}</h1></span>
+                        <h1><span>{apodData.title}</span> | <span>{apodData.date}</span></h1>
                         <p>{apodData.explanation}</p>
                       </div>
                     </div>
