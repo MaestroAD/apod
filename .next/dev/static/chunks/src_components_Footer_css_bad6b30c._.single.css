@@ -1,0 +1,41 @@
+/* [project]/src/components/Footer.css [app-client] (css) */
+.footer {
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  box-sizing: border-box;
+  background: linear-gradient(to right, #fc3c2380, #0a3c9180, #ba1e6880);
+  border-top: 1px solid #ffffff1a;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: auto;
+  padding: 1rem 2rem;
+  font-family: Nasalization, sans-serif;
+  display: flex;
+}
+
+.footer-left {
+  text-align: left;
+}
+
+.footer-right {
+  align-items: center;
+  gap: 1rem;
+  display: flex;
+}
+
+.footer-logo-apod, .footer-logo-nasa {
+  width: auto;
+  height: 40px;
+}
+
+@media (max-width: 600px) {
+  .footer {
+    text-align: center;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+}
+
+/*# sourceMappingURL=src_components_Footer_css_bad6b30c._.single.css.map*/

@@ -1,11 +1,25 @@
 /* Header.css */
 
 .header {
-    width: 100%;
-    background-color: #3f51b5;
-  }
-  
-  .header .MuiToolbar-root {
-    justify-content: space-between;
-  }
-  
+  width: 100%;
+  /* Gradient and Glass effect handled by utility class or manually here */
+  background: linear-gradient(to right,
+      rgba(252, 60, 35, 0.5),
+      rgba(10, 60, 145, 0.5),
+      rgba(186, 30, 104, 0.5)) !important;
+  /* Importante to override MUI default */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Nasalization', sans-serif;
+}
+
+.header .MuiTypography-root,
+.header .MuiButton-root {
+  font-family: 'Nasalization', sans-serif !important;
+}
+
+.header .MuiToolbar-root {
+  justify-content: space-between;
+}

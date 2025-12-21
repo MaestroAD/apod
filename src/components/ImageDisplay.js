@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import {
   TextField,
@@ -8,10 +9,10 @@ import {
   FormControl,
   FormLabel
 } from '@mui/material';
-import { Carousel } from 'react-responsive-carousel';
-import 'react-responsive-carousel/lib/styles/carousel.min.css';
 import Header from './Header';
 import Footer from './Footer';
+import ApodCarousel from './ApodCarousel';
+import ApodInfo from './ApodInfo';
 import './ImageDisplay.css';
 
 const ImageDisplay = () => {
@@ -25,7 +26,7 @@ const ImageDisplay = () => {
   const [selectedOption, setSelectedOption] = useState('date');
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [showCarousel, setShowCarousel] = useState(false);
-  const API_KEY = process.env.REACT_APP_NASA_API_KEY;
+  const API_KEY = process.env.NEXT_PUBLIC_NASA_API_KEY;
 
   useEffect(() => {
     if (showCarousel) {
@@ -104,103 +105,88 @@ const ImageDisplay = () => {
   return (
     <div className='post-main-container'>
       <Header showCarousel={showCarousel} handleFetchImages={handleSubmit} handleBack={handleBack} />
-      <div className="image-display-container">
+      <div className={`image-display-container ${showCarousel ? 'carousel-mode' : ''}`}>
         {!showCarousel ? (
           <>
-            <FormControl component="fieldset">
-              <FormLabel component="legend">Query Type</FormLabel>
-              <RadioGroup row value={selectedOption} onChange={handleRadioChange}>
-                <FormControlLabel value="date" control={<Radio />} label="Date" />
-                <FormControlLabel value="date_range" control={<Radio />} label="Date Range" />
-                <FormControlLabel value="count" control={<Radio />} label="Count" />
-              </RadioGroup>
-            </FormControl>
-            <form className="image-display-form" onSubmit={handleSubmit}>
-              <Grid container spacing={2}>
-                {selectedOption === 'date' && (
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      label="Date"
-                      InputLabelProps={{ shrink: true }}
-                      name="date"
-                      value={queryParams.date || ''}
-                      onChange={handleInputChange}
-                    />
-                  </Grid>
-                )}
-                {selectedOption === 'date_range' && (
-                  <>
-                    <Grid item xs={12} sm={6}>
+            <div className="glass-box-container">
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Query Type</FormLabel>
+                <RadioGroup row value={selectedOption} onChange={handleRadioChange}>
+                  <FormControlLabel value="date" control={<Radio />} label="Date" />
+                  <FormControlLabel value="date_range" control={<Radio />} label="Date Range" />
+                  <FormControlLabel value="count" control={<Radio />} label="Count" />
+                </RadioGroup>
+              </FormControl>
+              <form className="image-display-form" onSubmit={handleSubmit}>
+                <Grid container spacing={2}>
+                  {selectedOption === 'date' && (
+                    <Grid item xs={12}>
                       <TextField
                         fullWidth
                         type="date"
-                        label="Start Date"
+                        label="Date"
                         InputLabelProps={{ shrink: true }}
-                        name="start_date"
-                        value={queryParams.start_date || ''}
+                        name="date"
+                        value={queryParams.date || ''}
                         onChange={handleInputChange}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                  )}
+                  {selectedOption === 'date_range' && (
+                    <>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          type="date"
+                          label="Start Date"
+                          InputLabelProps={{ shrink: true }}
+                          name="start_date"
+                          value={queryParams.start_date || ''}
+                          onChange={handleInputChange}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          type="date"
+                          label="End Date"
+                          InputLabelProps={{ shrink: true }}
+                          name="end_date"
+                          value={queryParams.end_date || ''}
+                          onChange={handleInputChange}
+                        />
+                      </Grid>
+                    </>
+                  )}
+                  {selectedOption === 'count' && (
+                    <Grid item xs={12}>
                       <TextField
                         fullWidth
-                        type="date"
-                        label="End Date"
-                        InputLabelProps={{ shrink: true }}
-                        name="end_date"
-                        value={queryParams.end_date || ''}
+                        type="number"
+                        label="Count"
+                        name="count"
+                        value={queryParams.count || ''}
                         onChange={handleInputChange}
                       />
                     </Grid>
-                  </>
-                )}
-                {selectedOption === 'count' && (
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      type="number"
-                      label="Count"
-                      name="count"
-                      value={queryParams.count || ''}
-                      onChange={handleInputChange}
-                    />
-                  </Grid>
-                )}
-              </Grid>
-            </form>
+                  )}
+                </Grid>
+              </form>
+            </div>
           </>
         ) : (
-          <>
-            {imageData.length > 0 && (
-              <div className="image-display-carousel">
-                <Carousel selectedItem={carouselIndex} onChange={(index) => setCarouselIndex(index)} showThumbs={false}>
-                  {imageData.map((apodData, index) => (
-                    <div key={index}>
-                      {apodData.media_type === 'image' ? (
-                        <img src={apodData.url} alt={`NASA APOD ${index}`} />
-                      ) : (
-                        <div className='video-container'>
-                          <iframe
-                            src={apodData.url}
-                            title={`NASA APOD ${index}`}
-                            frameBorder='0'
-                            allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
-                            allowFullScreen
-                          ></iframe>
-                        </div>
-                      )}
-                      <div className='image-display-apod-data'>
-                        <h1><span>{apodData.title}</span> | <span>{apodData.date}</span></h1>
-                        <p>{apodData.explanation}</p>
-                      </div>
-                    </div>
-                  ))}
-                </Carousel>
-              </div>
-            )}
-          </>
+          <div className="carousel-layout">
+            <div className="carousel-section">
+              {imageData.length > 0 && (
+                <ApodCarousel images={imageData} onChange={setCarouselIndex} />
+              )}
+            </div>
+            <div className="info-section">
+              {imageData.length > 0 && (
+                <ApodInfo info={imageData[carouselIndex]} />
+              )}
+            </div>
+          </div>
         )}
       </div>
       <Footer />
