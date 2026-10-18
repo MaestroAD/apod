@@ -2,7 +2,7 @@ import React from 'react';
 import { AppBar, Toolbar, Typography, Button } from '@mui/material';
 import './Header.css';
 
-const Header = ({ showCarousel, handleFetchImages, handleBack }) => {
+const Header = ({ showCarousel, handleFetchImages, handleBack, loading = false }) => {
   return (
     <AppBar position="static" className="header">
       <Toolbar>
@@ -10,8 +10,8 @@ const Header = ({ showCarousel, handleFetchImages, handleBack }) => {
           NASA APOD Viewer
         </Typography>
         {!showCarousel ? (
-          <Button color="inherit" onClick={handleFetchImages}>
-            Fetch Images
+          <Button color="inherit" onClick={handleFetchImages} disabled={loading}>
+            {loading ? 'Fetching...' : 'Fetch Images'}
           </Button>
         ) : (
           <Button color="inherit" onClick={handleBack}>

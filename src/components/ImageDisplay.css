@@ -260,3 +260,61 @@
 .glass-box-container .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline {
   border-color: white !important;
 }
+
+.glass-box-container .MuiFormHelperText-root {
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-size: 0.78rem !important;
+}
+
+.glass-box-container input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+.status-box-container {
+  width: 100%;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin: 2rem auto;
+  animation: fadeInStatus 0.3s ease-in-out;
+}
+
+@keyframes fadeInStatus {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fetch-submit-btn {
+  background: linear-gradient(135deg, rgba(252, 60, 35, 0.9), rgba(10, 60, 145, 0.9)) !important;
+  color: white !important;
+  padding: 0.6rem 2.2rem !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  text-transform: none !important;
+  box-shadow: 0 4px 15px rgba(252, 60, 35, 0.4) !important;
+  transition: all 0.3s ease !important;
+}
+
+.fetch-submit-btn:hover {
+  background: linear-gradient(135deg, rgba(252, 60, 35, 1), rgba(10, 60, 145, 1)) !important;
+  box-shadow: 0 6px 20px rgba(252, 60, 35, 0.6) !important;
+  transform: translateY(-2px);
+}
