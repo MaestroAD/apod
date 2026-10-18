@@ -46,6 +46,14 @@ const ApodCarousel = ({ images, onChange }) => {
                     <div key={index} className="slide-content">
                         {apodItem.media_type === 'image' ? (
                             <img src={apodItem.url} alt={apodItem.title} />
+                        ) : apodItem.url?.endsWith('.mp4') ? (
+                            <div className="video-container">
+                                <video
+                                    controls
+                                    src={apodItem.url}
+                                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: 8 }}
+                                />
+                            </div>
                         ) : (
                             <div className="video-container">
                                 <iframe

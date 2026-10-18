@@ -21,6 +21,7 @@ import ApodInfo from './ApodInfo';
 import './ImageDisplay.css';
 
 const MIN_APOD_DATE = '1995-06-16';
+const API_BASE_URL = 'https://science.nasa.gov/wp-json/wp/v2/apod-basic';
 
 const getTodayDateString = () => {
   const today = new Date();
@@ -28,6 +29,69 @@ const getTodayDateString = () => {
   const month = String(today.getMonth() + 1).padStart(2, '0');
   const day = String(today.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+
+const toYYMMDD = (dateStr) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const yy = parts[0].slice(-2);
+    const mm = parts[1];
+    const dd = parts[2];
+    return `${yy}${mm}${dd}`;
+  }
+  return dateStr;
+};
+
+const getDatesInRange = (startDateStr, endDateStr) => {
+  const dates = [];
+  let curr = new Date(startDateStr + 'T00:00:00');
+  const end = new Date(endDateStr + 'T00:00:00');
+  while (curr <= end) {
+    const yyyy = curr.getFullYear();
+    const mm = String(curr.getMonth() + 1).padStart(2, '0');
+    const dd = String(curr.getDate()).padStart(2, '0');
+    dates.push(`${yyyy}-${mm}-${dd}`);
+    curr.setDate(curr.getDate() + 1);
+  }
+  return dates;
+};
+
+const cleanExplanation = (rawExplanation) => {
+  if (!rawExplanation) return 'No description provided.';
+  let clean = rawExplanation.replace(/^<strong>Explanation:?<\/strong>\s*/i, '');
+  clean = clean.replace(/^Explanation:?\s*/i, '');
+  clean = clean.replace(/<[^>]*>/g, '');
+  clean = clean.replace(/&#8211;/g, '-');
+  clean = clean.replace(/&#039;/g, "'");
+  clean = clean.replace(/&quot;/g, '"');
+  clean = clean.replace(/&amp;/g, '&');
+  return clean.trim();
+};
+
+const extractMediaUrl = (item) => {
+  if (item.media_type === 'video') {
+    if (item.basic_html) {
+      const sourceMatch = item.basic_html.match(/<source[^>]+src=["']([^"']+)["']/i);
+      if (sourceMatch) return sourceMatch[1];
+      const iframeMatch = item.basic_html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+      if (iframeMatch) return iframeMatch[1];
+      const videoMatch = item.basic_html.match(/<video[^>]+src=["']([^"']+)["']/i);
+      if (videoMatch) return videoMatch[1];
+    }
+    return item.url;
+  }
+  return item.hdurl || item.url;
+};
+
+const formatApodItem = (item) => {
+  return {
+    title: item.title || 'NASA Astronomy Picture',
+    date: item.date || '',
+    explanation: cleanExplanation(item.explanation),
+    media_type: item.media_type || 'image',
+    url: extractMediaUrl(item)
+  };
 };
 
 const ImageDisplay = () => {
@@ -44,7 +108,6 @@ const ImageDisplay = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_KEY = process.env.NEXT_PUBLIC_NASA_API_KEY || 'DEMO_KEY';
   const todayDate = getTodayDateString();
 
   useEffect(() => {
@@ -56,61 +119,82 @@ const ImageDisplay = () => {
         setError(null);
 
         try {
-          let url = `https://api.nasa.gov/planetary/apod?api_key=${API_KEY}`;
           const { date, start_date, end_date, count } = queryParams;
+          let fetchedItems = [];
 
-          if (date) {
-            url += `&date=${date}`;
-          } else if (start_date && end_date) {
-            url += `&start_date=${start_date}&end_date=${end_date}`;
-          } else if (count) {
-            url += `&count=${count}`;
-          }
+          if (selectedOption === 'date') {
+            const url = date
+              ? `${API_BASE_URL}/${toYYMMDD(date)}`
+              : `${API_BASE_URL}?per_page=1`;
 
-          const response = await fetch(url);
-          if (!response.ok) {
-            let errorMsg = `NASA API error (${response.status}: ${response.statusText})`;
-            try {
-              const errorData = await response.json();
-              if (errorData?.error?.message) {
-                errorMsg = errorData.error.message;
-              } else if (errorData?.msg) {
-                errorMsg = errorData.msg;
-              } else if (typeof errorData === 'string') {
-                errorMsg = errorData;
+            const response = await fetch(url);
+            if (!response.ok) {
+              if (response.status === 404) {
+                throw new Error(`No APOD entry found for date ${date || 'today'}.`);
               }
-            } catch (_) {
-              // Non-JSON response fallback
+              let errorMsg = `NASA API error (${response.status}: ${response.statusText})`;
+              try {
+                const errJson = await response.json();
+                if (errJson?.message) errorMsg = errJson.message;
+              } catch (_) {}
+              throw new Error(errorMsg);
             }
-            throw new Error(errorMsg);
+
+            const data = await response.json();
+            if (Array.isArray(data)) {
+              fetchedItems = data;
+            } else {
+              fetchedItems = [data];
+            }
+          } else if (selectedOption === 'date_range') {
+            const dates = getDatesInRange(start_date, end_date);
+            const requests = dates.map(async (d) => {
+              try {
+                const res = await fetch(`${API_BASE_URL}/${toYYMMDD(d)}`);
+                if (!res.ok) return null;
+                return await res.json();
+              } catch (_) {
+                return null;
+              }
+            });
+
+            const results = await Promise.all(requests);
+            fetchedItems = results.filter(Boolean);
+
+            if (fetchedItems.length === 0) {
+              throw new Error('No APOD entries could be retrieved for the selected date range.');
+            }
+          } else if (selectedOption === 'count') {
+            const numCount = Math.min(100, Math.max(1, Number(count) || 1));
+            const url = `${API_BASE_URL}?per_page=${numCount}`;
+
+            const response = await fetch(url);
+            if (!response.ok) {
+              let errorMsg = `NASA API error (${response.status}: ${response.statusText})`;
+              try {
+                const errJson = await response.json();
+                if (errJson?.message) errorMsg = errJson.message;
+              } catch (_) {}
+              throw new Error(errorMsg);
+            }
+
+            const data = await response.json();
+            if (Array.isArray(data)) {
+              fetchedItems = data;
+            } else {
+              fetchedItems = [data];
+            }
           }
 
-          const data = await response.json();
           if (!isMounted) return;
 
-          if (Array.isArray(data)) {
-            if (data.length === 0) {
-              throw new Error('No images returned for the selected criteria.');
-            }
-            const responseData = data.map(apodItem => ({
-              title: apodItem.title || 'NASA Astronomy Picture',
-              date: apodItem.date || '',
-              explanation: apodItem.explanation || 'No description provided.',
-              media_type: apodItem.media_type,
-              url: apodItem.hdurl ? apodItem.hdurl : apodItem.url
-            }));
-            setImageData(responseData);
-            setCarouselIndex(0);
-          } else {
-            setImageData([{
-              title: data.title || 'NASA Astronomy Picture',
-              date: data.date || '',
-              explanation: data.explanation || 'No description provided.',
-              media_type: data.media_type,
-              url: data.hdurl ? data.hdurl : data.url
-            }]);
-            setCarouselIndex(0);
+          if (fetchedItems.length === 0) {
+            throw new Error('No images returned for the selected criteria.');
           }
+
+          const responseData = fetchedItems.map(formatApodItem);
+          setImageData(responseData);
+          setCarouselIndex(0);
         } catch (err) {
           if (!isMounted) return;
           console.error('Error fetching image:', err);
@@ -128,7 +212,7 @@ const ImageDisplay = () => {
         isMounted = false;
       };
     }
-  }, [API_KEY, queryParams, showCarousel]);
+  }, [queryParams, selectedOption, showCarousel]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -172,6 +256,10 @@ const ImageDisplay = () => {
       }
       if (start_date > end_date) {
         return 'Start Date cannot be later than End Date.';
+      }
+      const dates = getDatesInRange(start_date, end_date);
+      if (dates.length > 30) {
+        return 'Date range cannot exceed 30 days.';
       }
     } else if (selectedOption === 'count') {
       if (!count || isNaN(count)) {
@@ -306,7 +394,7 @@ const ImageDisplay = () => {
                         min: 1,
                         max: 100
                       }}
-                      helperText="Random pictures count (1 - 100)"
+                      helperText="Pictures count (1 - 100)"
                     />
                   </Grid>
                 )}
